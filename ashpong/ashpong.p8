@@ -9,14 +9,16 @@ function _init()
 		x=64,
 		y=64,
 		r=2,
-		vx=rnd(1),
-		vy=rnd(1),
+		dx=rnd(2) - 1, --direction
+		dy=rnd(2) - 1,
+		spd=1 
 	}
 	pad = {
 		x=64,
 		y=120,
 		w=20,
 		h=5,
+		spd=2,
 		c=15
 	}
 	bricks = {}
@@ -49,7 +51,34 @@ function setup(cols,rows)
 end
 
 function _update()
+	--paddle move
+	if btn(1) then
+		pad.x+=pad.spd
+	end
+	if btn(0) then
+		pad.x-=pad.spd
+	end
+	pad.x=mid(0,pad.x,128-pad.w)
 	
+	--ball move
+ ball.x+=ball.dx
+ ball.y+=ball.dy
+	
+	 -- wall bounce
+  if ball.x-ball.r<0 then 
+  	ball.x=ball.r
+  	ball.dx*=-1
+  end
+  if ball.x+ball.r>128 then
+   ball.x=128-ball.r
+   ball.dx*=-1 
+  end
+  if ball.y-ball.r<0 then
+   ball.y=ball.r 
+   ball.dy*=-1 
+  end
+  
+  
 end
 
 function _draw()
