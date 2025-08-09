@@ -10,7 +10,7 @@ function _init()
 		r=2,
 		dx=rnd(2) - 1, --direction
 		dy=rnd(2) - 1,
-		spd=1,
+		spd=3,
 		c=14 
 	}
 	pad = {
@@ -44,11 +44,11 @@ function setup(cols,rows)
 				w=ow,
 				h=oh,
 				c=11,
-				hp=flr(rnd(3))+1
+				hp=1
 			})
+			
 		end
 	end
-	
 end
 
 function _update()
@@ -93,11 +93,20 @@ function _update()
 	if c_in_r(ball, pad) then
 		ball.dy*=-1
 	end
+	
+	--brick break
+	for brick in all(bricks) do
+		if c_in_r(ball, brick) 
+				and brick.hp>0 then
+			brick.hp -= 1
+			--ball.dy*=-1
+		end
+	end
   
 end
 
 function c_in_r(c,r)
-	--clamp c.x in r.x & r.x+w
+	--get distance using c pos & clamp
 	local dx = c.x - mid(r.x, c.x, r.x+r.w) 
 	local dy = c.y - mid(r.y, c.y, r.y+r.h)
 	--pythagoras	magic
@@ -118,9 +127,10 @@ function _draw()
 	
 	--bricks
 	for brick in all(bricks) do
-		rectfill(brick.x, brick.y, brick.x+brick.w,brick.y+brick.h, brick.c)
-		rect(brick.x, brick.y, brick.x+brick.w,brick.y+brick.h, 1)
-		--print(brick.hp,(brick.x+brick.w/2)-2, (brick.y+brick.h/2)-2, 1)
+		if brick.hp > 0 then
+			rectfill(brick.x, brick.y, brick.x+brick.w,brick.y+brick.h, brick.c)
+			rect(brick.x, brick.y, brick.x+brick.w,brick.y+brick.h, 1)
+		end
 	end
 	--paddle
 	rectfill(pad.x, pad.y, pad.x+pad.w, pad.y+pad.h, pad.c)
