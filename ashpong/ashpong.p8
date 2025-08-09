@@ -3,7 +3,6 @@ version 42
 __lua__
 --ashpong
 --by ash
-
 function _init()
 	ball = {
 		x=64,
@@ -89,13 +88,30 @@ function _update()
  		--game over here.
  	end
  end	
+
+	--paddle bounce
+	if c_in_r(ball, pad) then
+		ball.dy*=-1
+	end
   
 end
 
+function c_in_r(c,r)
+	--clamp c.x in r.x & r.x+w
+	local dx = c.x - mid(r.x, c.x, r.x+r.w) 
+	local dy = c.y - mid(r.y, c.y, r.y+r.h)
+	--pythagoras	magic
+	return dx*dx + dy*dy <= c.r*c.r
+end
+
+
+-->8
+--draw code
 function _draw()
 	cls()
+	--top info
 	print("score:"..score, 2,2, 7)
-	print("lives:", 85,2, 7)
+	print("lives:", 85, 2, 7)
 	for b=0,lives-1 do
 		circfill((((ball.r*2)+2)*b)+110, 4, ball.r, 7)
 	end
@@ -110,6 +126,8 @@ function _draw()
 	rectfill(pad.x, pad.y, pad.x+pad.w, pad.y+pad.h, pad.c)
 	--ball
 	circfill(ball.x, ball.y, ball.r, ball.c)
+	local test = c_in_r(ball,pad)
+	print(test, ball.x+3, ball.y)
 end	
 __gfx__
 00000000004444000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
