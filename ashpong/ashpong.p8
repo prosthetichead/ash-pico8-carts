@@ -126,8 +126,6 @@ function _draw()
 	rectfill(pad.x, pad.y, pad.x+pad.w, pad.y+pad.h, pad.c)
 	--ball
 	circfill(ball.x, ball.y, ball.r, ball.c)
-	local test = c_in_r(ball,pad)
-	print(test, ball.x+3, ball.y)
 end	
 __gfx__
 00000000004444000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
