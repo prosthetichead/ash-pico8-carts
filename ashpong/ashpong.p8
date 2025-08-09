@@ -11,7 +11,8 @@ function _init()
 		r=2,
 		dx=rnd(2) - 1, --direction
 		dy=rnd(2) - 1,
-		spd=1 
+		spd=1,
+		c=14 
 	}
 	pad = {
 		x=64,
@@ -23,6 +24,7 @@ function _init()
 	}
 	bricks = {}
 	level = 1
+	lives = 3
 	score = 0
 	
 	setup(16,12)
@@ -64,26 +66,39 @@ function _update()
  ball.x+=ball.dx
  ball.y+=ball.dy
 	
-	 -- wall bounce
-  if ball.x-ball.r<0 then 
-  	ball.x=ball.r
-  	ball.dx*=-1
-  end
-  if ball.x+ball.r>128 then
-   ball.x=128-ball.r
-   ball.dx*=-1 
-  end
-  if ball.y-ball.r<0 then
-   ball.y=ball.r 
-   ball.dy*=-1 
-  end
+	--wall bounce
+ if ball.x-ball.r<0 then 
+  ball.x=ball.r
+  ball.dx*=-1
+ end
+ if ball.x+ball.r>128 then
+  ball.x=128-ball.r
+  ball.dx*=-1 
+ end
+ if ball.y-ball.r<9 then
+  ball.y=9+ball.r 
+  ball.dy*=-1 
+ end
   
+ --ball death
+ if ball.y+ball.r>128 then
+ 	--reset ball
+ 	ball.x,ball.y=64,64
+ 	lives-=1
+ 	if lives<0 then
+ 		--game over here.
+ 	end
+ end	
   
 end
 
 function _draw()
 	cls()
-	print("score:"..score)
+	print("score:"..score, 2,2, 7)
+	print("lives:", 85,2, 7)
+	for b=0,lives-1 do
+		circfill((((ball.r*2)+2)*b)+110, 4, ball.r, 7)
+	end
 	
 	--bricks
 	for brick in all(bricks) do
@@ -94,7 +109,7 @@ function _draw()
 	--paddle
 	rectfill(pad.x, pad.y, pad.x+pad.w, pad.y+pad.h, pad.c)
 	--ball
-	circfill(ball.x, ball.y, ball.r, 7)
+	circfill(ball.x, ball.y, ball.r, ball.c)
 end	
 __gfx__
 00000000004444000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
