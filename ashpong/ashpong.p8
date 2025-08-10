@@ -1,9 +1,43 @@
 pico-8 cartridge // http://www.pico-8.com
 version 42
 __lua__
---ashpong
---by ash
+--ashpong - by ash
 function _init()
+	state=1
+	init_1()
+end
+
+function _update()
+	if state==1 then 
+		update_1() 
+	elseif state==2 then 
+		update_2()
+	end
+end
+
+function _draw()
+	if state==1 then 
+		draw_1()
+	elseif state==2 then 
+		draw_2()
+	else
+		cls(8) 	
+		print("err state="..state)
+	end
+end
+-->8
+-- 1 splash state code
+function init_1()
+end
+
+function update_1()
+end
+
+function draw_1()
+end
+-->8
+-- 2 game state code 
+function init_2()
 	ball = {
 		x=64,
 		y=64,
@@ -51,7 +85,7 @@ function setup(cols,rows)
 	end
 end
 
-function _update()
+function update_2()
 	--paddle move
 	if btn(1) then
 		pad.x+=pad.spd
@@ -102,7 +136,6 @@ function _update()
 			--ball.dy*=-1
 		end
 	end
-  
 end
 
 function c_in_r(c,r)
@@ -113,10 +146,7 @@ function c_in_r(c,r)
 	return dx*dx + dy*dy <= c.r*c.r
 end
 
-
--->8
---draw code
-function _draw()
+function draw_2()
 	cls()
 	--top info
 	print("score:"..score, 2,2, 7)
@@ -136,7 +166,7 @@ function _draw()
 	rectfill(pad.x, pad.y, pad.x+pad.w, pad.y+pad.h, pad.c)
 	--ball
 	circfill(ball.x, ball.y, ball.r, ball.c)
-end	
+end
 __gfx__
 00000000004444000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000004a444400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
