@@ -5,7 +5,7 @@ function _init()
 	init_title()
 end
 
-function _update()
+function _update60()
 	if state==ST.title then 
 		update_title() 
 	elseif state==ST.game then 
