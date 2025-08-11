@@ -3,7 +3,7 @@ function init_game()
 		x=64,
 		y=64,
 		a=0.33, -- angle in "turns": 1.0 = 360°, 0.25 = 90°
-		spd=10,
+		spd=40,
 		r=2,
         c=14 
 	}
@@ -15,7 +15,7 @@ function init_game()
 		y=120,
 		w=20,
 		h=5,
-		spd=15,
+		spd=50,
 		c=15
 	}
 	bricks = {}
@@ -104,23 +104,18 @@ function update_game()
 
 	--paddle bounce
 	if c_in_r(ball, pad) then
-		ball.vy*=-1
+        --calculate where the ball hit the paddle
+        local hit_pos = mid(-1, (ball.x - (pad.x+(pad.w/2))) / (pad.w/2), 1) 
+        ball.a = 0.25 + -hit_pos * (0.1667+(rnd() - 0.5) * 0.02)
+        ball_a_to_v()
 	end
 	
 	--brick break
 	for brick in all(bricks) do
 		if c_in_r(ball, brick) 
 				and brick.hp>0 then
-			brick.hp -= 1
-			ball.vy*=-1
+			brick.hp -= 1			
             score += 10
-            ball.spd += .1 --increase speed
-            -- new angle
-            ball.a = (ball.x - mid(brick.x, ball.x, brick.x+brick.w)) / (brick.w/2) * 0.5 + 0.5 -- normalize to [-0.5, 0.5]
-            if ball.a < 0 then
-                ball.a = -ball.a -- reflect angle if negative
-            end
-            ball_a_to_v()
 		end
 	end
 end
@@ -135,8 +130,8 @@ end
 
 function ball_a_to_v()
     --convert angle to velocity
-    ball.vx = ball.spd * cos(ball.a)*ball.spd
-    ball.vy = ball.spd * sin(ball.a)*ball.spd
+    ball.vx = cos(ball.a)*ball.spd
+    ball.vy = sin(ball.a)*ball.spd
 end
 
 function draw_game()
