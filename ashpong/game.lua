@@ -3,9 +3,10 @@ function init_game()
 		x=64,
 		y=64,
 		a=0.33, -- angle in "turns": 1.0 = 360°, 0.25 = 90°
-		spd=40,
+		spd=80,
 		r=2,
-        c=14 
+        c=14, 
+        hold=true
 	}
     -- convert angle to velocity
     ball_a_to_v()
@@ -15,7 +16,7 @@ function init_game()
 		y=120,
 		w=20,
 		h=5,
-		spd=50,
+		spd=100,
 		c=15
 	}
 	bricks = {}
@@ -51,6 +52,23 @@ end
 function update_game()
     local dt = 1/60
 
+    --hold ball
+    if ball.hold then
+        --move ball with paddle
+        ball.x = pad.x + (pad.w / 2)
+        ball.y = pad.y - ball.r-1
+        --release on button press
+        if btnp(4) then
+            ball.hold = false
+            ball_a_to_v() -- convert angle to velocity
+        end
+    else
+            --ball move
+ 	    ball.x+=ball.vx*dt
+ 	    ball.y+=ball.vy*dt
+    end
+
+
     --paddle move
 	if btn(1) then
 		pad.x+=pad.spd*dt
@@ -60,24 +78,6 @@ function update_game()
 	end
 	pad.x=mid(0,pad.x,128-pad.w)
 
-    --ball move
- 	ball.x+=ball.vx*dt
- 	ball.y+=ball.vy*dt
-
-    --ball bounce
-    if ball.x-ball.r<0 then 
-        ball.x=ball.r
-        ball.vx*=-1
-    end
-    if ball.x+ball.r>128 then
-        ball.x=128-ball.r
-        ball.vx*=-1 
-    end
-    if ball.y-ball.r<9 then
-        ball.y=9+ball.r 
-        ball.vy*=-1 
-    end
-	
 	--wall bounce
     if ball.x-ball.r<0 then 
         ball.x=ball.r
@@ -95,10 +95,11 @@ function update_game()
     --ball death
     if ball.y+ball.r>128 then
  	    --reset ball
- 	    ball.x,ball.y=64,64
+ 	    ball.hold = true
  	    lives-=1
  	    if lives<0 then
- 		    --game over here.
+ 		    init_over()
+            state = ST.over
  	    end
     end	
 
@@ -140,7 +141,7 @@ function draw_game()
 	print("score:"..score, 2,2, 7)
 	print("lives:", 85, 2, 7)
 	for b=0,lives-1 do
-		circfill((((ball.r*2)+2)*b)+110, 4, ball.r, 7)
+		circfill((((2*2)+2)*b)+110, 4, 2, 7)
 	end
 	
 	--bricks
