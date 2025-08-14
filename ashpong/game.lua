@@ -6,7 +6,8 @@ function init_game()
 		spd=80,
 		r=2,
         c=14, 
-        hold=true
+        hold=true,
+		multi=1, -- multiplier for score
 	}
     -- convert angle to velocity
     ball_a_to_v()
@@ -24,8 +25,11 @@ function init_game()
 	lives = 3
 	score = 0
 	
-	setup(16,12)
+	setup(16, 12) 
+
 end
+
+
 
 function setup(cols,rows)
 	--width and height
@@ -95,9 +99,11 @@ function update_game()
     --ball death
     if ball.y+ball.r>128 then
  	    --reset ball
+		ball.multi = 1
  	    ball.hold = true
  	    lives-=1
  	    if lives<0 then
+            last_score = score
  		    init_over()
             state = ST.over
  	    end
@@ -105,6 +111,7 @@ function update_game()
 
 	--paddle bounce
 	if c_in_r(ball, pad) then
+		ball.multi = 1
         --calculate where the ball hit the paddle
         local hit_pos = mid(-1, (ball.x - (pad.x+(pad.w/2))) / (pad.w/2), 1) 
         ball.a = 0.25 + -hit_pos * (0.1667+(rnd() - 0.5) * 0.02)
@@ -116,7 +123,24 @@ function update_game()
 		if c_in_r(ball, brick) 
 				and brick.hp>0 then
 			brick.hp -= 1			
-            score += 10
+            score += 10 * ball.multi
+			ball.multi += 1
+			--bounce ball
+			if abs(ball.vy) > abs(ball.vx) then
+				--hit top or bottom
+				if ball.y < brick.y or ball.y > brick.y + brick.h then
+					ball.vy *= -1
+				else
+					ball.vx *= -1
+				end
+			else
+				--hit left or right
+				if ball.x < brick.x or ball.x > brick.x + brick.w then
+					ball.vx *= -1
+				else
+					ball.vy *= -1
+				end
+			end
 		end
 	end
 end
