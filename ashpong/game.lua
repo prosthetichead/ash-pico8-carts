@@ -3,6 +3,8 @@ function init_game()
 		x=64,
 		y=64,
 		a=0.33, -- angle in "turns": 1.0 = 360°, 0.25 = 90°
+		spin=0,
+		spin_rate=0.01, 
 		spd=80,
 		r=2,
         c=14, 
@@ -14,9 +16,9 @@ function init_game()
 
 	pad = {
 		x=64,
-		y=120,
-		w=20,
-		h=5,
+		y=115,
+		w=24,
+		h=8,
 		spd=100,
 		c=15
 	}
@@ -25,32 +27,32 @@ function init_game()
 	lives = 3
 	score = 0
 	
-	setup(16, 12) 
+	load_level(level)
 
 end
 
+function load_level(idx)
+	local lvl=lvls[idx]
+	local oh=5 local ow=8
+  	local ox=0 local oy=8
 
-
-function setup(cols,rows)
-	--width and height
-	local oh=4 local ow=8
-	--pos of first brick
-	local ox=0 local oy=8
-
-	for r=0,rows-1 do
-		for c=0,cols-1 do
-		 
-			add(bricks,{
-				x=ox+c*ow,
-				y=oy+r*oh,
-				w=ow,
-				h=oh,
-				c=11,
-				hp=1
-			})
-			
+	for row=1,#lvl.layout do
+		local line=lvl.layout[row]
+		for col=1,#line do
+			local ch=sub(line,col,col)
+			local def=lveldefs[ch]
+			if def != "." and def != nil then
+				add(bricks,{
+					x=ox+(col-1)*ow,
+					y=oy+(row-1)*oh,
+					w=ow,
+					h=oh,
+					c=def.c,
+					hp=def.hp
+				})
+			end
 		end
-	end
+	end		 
 end
 
 function update_game()
@@ -61,15 +63,19 @@ function update_game()
         --move ball with paddle
         ball.x = pad.x + (pad.w / 2)
         ball.y = pad.y - ball.r-1
+		ball.spin = 0
+		ball.spin_rate = 0.01
         --release on button press
         if btnp(4) then
             ball.hold = false
             ball_a_to_v() -- convert angle to velocity
         end
     else
-            --ball move
+        --ball move
  	    ball.x+=ball.vx*dt
  	    ball.y+=ball.vy*dt
+		ball.spin=(ball.spin+ball.spin_rate)%1
+		ball.spin_rate*=0.995 -- gradual decay
     end
 
 
@@ -86,14 +92,17 @@ function update_game()
     if ball.x-ball.r<0 then 
         ball.x=ball.r
         ball.vx*=-1
+		ball.spin_rate += 0.01
     end
     if ball.x+ball.r>128 then
         ball.x=128-ball.r
         ball.vx*=-1 
+		ball.spin_rate -= 0.01 
     end
     if ball.y-ball.r<9 then
         ball.y=9+ball.r 
         ball.vy*=-1 
+		ball.spin_rate += 0.01
     end
     
     --ball death
@@ -159,8 +168,29 @@ function ball_a_to_v()
     ball.vy = sin(ball.a)*ball.spd
 end
 
+function draw_ball(b)
+	local r=b.r
+
+	--circfill(b.x+1, b.y+1, b.r, 5)
+	circfill(b.x, b.y, b.r, 6)
+	circ(b.x,b.y,b.r,5)
+
+  	-- rotating seam (thin line across the face)
+  	local a=b.spin         -- 0..1 turn
+  	local nx=cos(a)  local ny=sin(a)
+  	line(b.x-nx*(r-1), b.y-ny*(r-1), b.x+nx*(r-1), b.y+ny*(r-1), 8)
+
+  -- specular glint orbiting the edge (offset +90°)
+  --local gx=b.x+cos(a+0.25)*(r-1)
+  --local gy=b.y+sin(a+0.25)*(r-1)
+  --pset(gx,gy,7)                   -- white (7)
+  -- thicken the glint a touch
+  --pset(gx-1,gy,7)
+
+end
+
 function draw_game()
-    cls()
+    cls(1)
 	--top info
 	print("score:"..score, 2,2, 7)
 	print("lives:", 85, 2, 7)
@@ -171,12 +201,19 @@ function draw_game()
 	--bricks
 	for brick in all(bricks) do
 		if brick.hp > 0 then
-			rectfill(brick.x, brick.y, brick.x+brick.w,brick.y+brick.h, brick.c)
-			rect(brick.x, brick.y, brick.x+brick.w,brick.y+brick.h, 1)
+			spr(1,brick.x,brick.y)
+			--rectfill(brick.x, brick.y, brick.x+brick.w,brick.y+brick.h, brick.c)
+			--rect(brick.x, brick.y, brick.x+brick.w,brick.y+brick.h, 1)
 		end
 	end
-	--paddle
-	rectfill(pad.x, pad.y, pad.x+pad.w, pad.y+pad.h, pad.c)
+	
+	
 	--ball
-	circfill(ball.x, ball.y, ball.r, ball.c)
+	draw_ball(ball)
+
+	--paddle
+	spr(17,pad.x, pad.y)
+	spr(18,pad.x+8, pad.y)
+	spr(17,pad.x+16, pad.y,1,1,true)
+	--rectfill(pad.x, pad.y, pad.x+pad.w, pad.y+pad.h, pad.c)
 end
