@@ -3,7 +3,7 @@ function init_game()
 		x=64,
 		y=64,
 		a=0.33, -- angle in "turns": 1.0 = 360°, 0.25 = 90°
-		spd=40,
+		spd=90,
 		r=2,
         c=14 
 	}
@@ -15,7 +15,7 @@ function init_game()
 		y=120,
 		w=20,
 		h=5,
-		spd=50,
+		spd=80,
 		c=15
 	}
 	bricks = {}
@@ -106,6 +106,7 @@ function update_game()
 	if c_in_r(ball, pad) then
         --calculate where the ball hit the paddle
         local hit_pos = mid(-1, (ball.x - (pad.x+(pad.w/2))) / (pad.w/2), 1) 
+		--calculate new angle 90° + hit_pos * 60° 
         ball.a = 0.25 + -hit_pos * (0.1667+(rnd() - 0.5) * 0.02)
         ball_a_to_v()
 	end
@@ -116,6 +117,9 @@ function update_game()
 				and brick.hp>0 then
 			brick.hp -= 1			
             score += 10
+			--bounce ball
+			ball.vy *= -1
+			
 		end
 	end
 end
