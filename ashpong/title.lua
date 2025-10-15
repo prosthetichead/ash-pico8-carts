@@ -12,6 +12,7 @@ end
 
 function draw_title()
     cls(8)
-    print("ashpong", 40, 20, 7)
+    print("high score: " .. high_score, 2, 2, 7)
+    print("ashpong", 50, 40, 7)
     print("press ❎ to start", 30, 50, 7)
 end
