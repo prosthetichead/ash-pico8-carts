@@ -1,5 +1,5 @@
 pico-8 cartridge // http://www.pico-8.com
-version 43
+version 42
 __lua__
 --ashpong - by ash
 #include ashpong/main.lua
