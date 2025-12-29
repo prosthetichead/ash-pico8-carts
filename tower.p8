@@ -1,35 +1,108 @@
 pico-8 cartridge // http://www.pico-8.com
-version 42
+version 43
 __lua__
-function _init()
 
+function _init()
 	t = 0
 	directions = {
-  {0, -8}, -- up
-  {0, 8},  -- down
-  {-8, 0}, -- left
-  {8, 0}   -- right
+		{0, -8}, -- up
+		{0, 8},  -- down
+		{-8, 0}, -- left
+		{8, 0}   -- right
 	}
-
- plr = {
- 	gx = 0,
- 	gy = 0,
- 	gold = 20,
- 	menu=false,
- }
- --setup grid
- rows = 14
+	plr = {
+		gx = 0,
+		gy = 0,
+		gold = 20,
+		menu=false,
+	}
+ 
+ 	--setup grid
+	rows = 14
 	cols = 15
 	grid = {}
 	
-
-	
-	for i = 0, cols do
+	for i = -1, cols+1 do
 		grid[i] = {}
-		for j = 0, rows do
-			grid[i][j]=nothing
+		for j = -1, rows+1 do
+			grid[i][j]=copy_tbl(nothing)
 		end
 	end
+end
+
+function update_flow()    
+	for x = -1, cols + 1 do
+		for y = -1, rows + 1 do
+ 			grid[x][y].flow = 999 
+  		end
+ 	end
+ 
+	local q = {}
+	local kx = flr(king.gx)
+	local ky = flr(king.gy)
+        
+	grid[kx][ky].flow = 0
+	add(q, {x=kx, y=ky})
+	
+	
+	local head = 1
+	while head <= #q do
+		local curr = q[head]
+		head += 1 
+		for dir in all(directions) do
+			local nx = curr.x + dir[1]/8 
+			local ny = curr.y + dir[2]/8             
+			if nx >= -1 and nx <= cols + 1 and ny >= -1 and ny <= rows + 1 then                
+				local is_walkable = true
+				if nx >= 0 and nx <= cols and ny >= 0 and ny <= rows then
+					is_walkable = grid[nx][ny].walk
+				else
+					is_walkable = true
+				end
+			
+				if is_walkable then
+					local distflow = grid[curr.x][curr.y].flow + 1
+					if distflow < grid[nx][ny].flow then
+						grid[nx][ny].flow = distflow
+						add(q, {x=nx, y=ny})
+					end
+				end
+			end
+		end
+	end
+end
+
+function get_best_move(e)
+	if not flow_grid[e.gx] then return {0,0} end
+	
+	local current_score = flow_grid[e.gx][e.gy]
+	local best_dir = {0,0}
+    
+	for dir in all(directions) do
+		local nx = e.gx + dir[1]/8
+		local ny = e.gy + dir[2]/8
+        
+		if nx >= -1 and nx <= cols+1 and ny >= -1 and ny <= rows+1 then
+			local score = flow_grid[nx][ny]
+			if score < current_score then
+				current_score = score
+				best_dir = dir
+			end
+		end
+	end
+
+	return best_dir
+end
+
+function copy_tbl(obj)
+ if type(obj) ~= "table" then
+ 	return obj
+ end
+ local new_tbl = {}
+ for k, v in pairs(obj) do
+  new_tbl[k] = copy_tbl(v)
+ end
+ return new_tbl
 end
 
 function _update()
@@ -57,28 +130,30 @@ function _update()
  end
  
  u_king()
- 
+ u_enemy()
 end
 
 
 
 function _draw()
 	cls()
+	
 	for xi = 0, cols do
 		for yi = 0, rows do
 			cell = grid[xi][yi]
-			if(cell.state == "idle_up")then
-				spr(cell.idle_up[cell.frame], (xi)*8, (yi)*8)
-  	end
-  end
+			spr(cell.current_anim[cell.frame], (xi)*8, (yi)*8,1,1,cell.filp_h)
+			print(cell.flow,(xi)*8, (yi)*8,1)   
+		end
  end    
 	
 	--draw player
 	spr(1, plr.gx*8, plr.gy*8)
 	
 	print("♥"..king.hp, 1, 122, 10)
-	print("$"..plr.gold, 25, 122, 10)
-
+	print("$"..plr.gold, 25, 122, 10)	
+	
+	print("😐"..#enemies, 100, 122,10)
+	
 	d_king()
 
 	if plr.menu then
@@ -97,7 +172,7 @@ enemy = {
 	gx=-1,
 	gy=-1,
 	hp=10,
-	speed=.2
+	speed=.2,
 	anispeed=4,	
 	state="walk_h",
 	frame=0,
@@ -112,6 +187,9 @@ function u_enemy()
 	if t%100 == 0 then
 		spawn_enemy()
 	end
+	for e in all(enemies) do
+		
+	end
 end
 
 function spawn_enemy()
@@ -121,11 +199,22 @@ function spawn_enemy()
 	if(dir==1) then --top
 		new_e.gx=flr(rnd(cols))
 		new_e.gy=-1
-	end
-	if(dir==2) then --right
+	elseif(dir==2) then --right
 		new_e.gx=cols+1
 		new_e.gy=flr(rnd(rows))
-end
+	elseif(dir==3) then --left
+		new_e.gx=-1
+		new_e.gy=flr(rnd(rows))
+	else --bottom
+		new_e.gx=flr(rnd(cols))
+		new_e.gy=rows+1
+	end
+	new_e.x = new_e.gx * 8
+	new_e.y = new_e.gy * 8
+	add(enemies, new_e)
+	
+end	
+	
 -->8
 --menu
 options = {}
@@ -169,13 +258,13 @@ function u_menu()
 	elseif(choice == "infodone")then
 		plr.menu = false
 	elseif(choice == "buildwall")then
-		grid[plr.gx][plr.gy] = wall
+		grid[plr.gx][plr.gy] = copy_tbl(wall)
 		plr.menu = false
 	elseif(choice == "buildarrow")then
-		grid[plr.gx][plr.gy] = arrow_tower
+		grid[plr.gx][plr.gy] = copy_tbl(arrow_tower)
 		plr.menu = false
 	elseif(choice == "buildcannon")then
-		grid[plr.gx][plr.gy] = cannon_tower
+		grid[plr.gx][plr.gy] = copy_tbl(cannon_tower)
 		plr.menu = false
 	end
 	
@@ -221,16 +310,22 @@ nothing = {
  name="nothing",
 	idle_up = {3},
 	state = "idle_up",
+	current_anim = {3},
+	flip_h = false,
 	frame = 1,
 	walk = true,
+	flow = 999
 }
 
 wall = {
 	wall="wall",
 	idle_up = {4},
 	state = "idle_up",
+	current_anim = {4},
+	flip_h = false,
 	frame = 1,
 	walk=false,
+	flow = 999
 }
 
 cannon_tower = { 
@@ -239,8 +334,10 @@ cannon_tower = {
 	idle_right = {8},
 	fire_up = {5,6,7},
 	fire_right = {8,9,10},
-	state = "idle_up",
+	current_anim = {5},
+	state = "idle_up",	
 	frame = 1,
+	flip_h = false,
 	walk = false,
 	lvl=1,
 	kills=0,
@@ -248,7 +345,8 @@ cannon_tower = {
 	splash=1,
 	range=2,
 	dmg=1,
-	gold=10
+	gold=10,
+	flow = 999
 }
 
 arrow_tower = { 
@@ -258,6 +356,8 @@ arrow_tower = {
 	fire_up = {5,6,7},
 	fire_right = {8,9,10},
 	state = "idle_up",
+	current_anim = {5},
+	flip_h = false,
 	frame = 1,
 	walk = false,
 	lvl=1,
@@ -266,7 +366,8 @@ arrow_tower = {
 	splash=0,
 	range=5,
 	dmg=1,
-	gold=10
+	gold=10,
+	flow = 999
 }
 -->8
 --king
@@ -286,7 +387,8 @@ king = {
 	walk_h={20,21,20,22},
 	walk_v={17,19,17,18},
 	current_anim = {17},
-	flip_h=false
+	flip_h=false,
+	path=false;
 }
 
 
@@ -294,37 +396,44 @@ king = {
 function u_king()
 	if t%100 == 0 and king.state=="idle" then
   
-  local dir = directions[flr(rnd(4)) + 1]
-		
+  		local dir = directions[flr(rnd(4)) + 1]
+	
 		local next_gx = flr((king.x + dir[1]) / 8)
-  local next_gy = flr((king.y + dir[2]) / 8)
-  
-  if next_gx >= 0 and next_gx <= cols and 
-     next_gy >= 0 and next_gy <= rows then  
+		local next_gy = flr((king.y + dir[2]) / 8)
+	
+  		if next_gx >= 0 and next_gx <= cols and next_gy >= 0 and next_gy <= rows then  
 			local cell = grid[next_gx][next_gy]
 			if(cell.walk) then
 				king.tx = flr(king.x + dir[1])
-  		king.ty = flr(king.y + dir[2])  
-  	end
-  end		
- end
+  				king.ty = flr(king.y + dir[2])  
+  			end
+  		end		
+ 	end
  
 	if (flr(king.x) < king.tx) then
-	 king.x += king.speed
-	 king.state = "walk_h"
-	 king.flip_h = false
+	 	king.x += king.speed
+	 	king.state = "walk_h"
+	 	king.flip_h = false
 	elseif (flr(king.x) > king.tx) then 
 		king.x -= king.speed
 		king.state = "walk_h"
 		king.flip_h = true
- elseif (flr(king.y) < king.ty) then
- 	king.y += king.speed
- 	king.state = "walk_v"
+ 	elseif (flr(king.y) < king.ty) then
+ 		king.y += king.speed
+ 		king.state = "walk_v"
 	elseif (flr(king.y) > king.ty) then
-	 king.y -= king.speed
-	 king.state = "walk_v"
+	 	king.y -= king.speed
+	 	king.state = "walk_v"
 	else
-		king.state = "idle"
+		king.state = "idle"	
+		king.path = true
+	end
+
+	if (king.path) then
+		king.gx = king.x/8
+		king.gy = king.y/8
+		update_flow()
+		king.path = false
 	end
 
 	king.current_anim=king[king.state]
