@@ -95,32 +95,31 @@ function get_best_move(e)
 end
 
 function copy_tbl(obj)
- if type(obj) ~= "table" then
- 	return obj
- end
- local new_tbl = {}
- for k, v in pairs(obj) do
-  new_tbl[k] = copy_tbl(v)
- end
- return new_tbl
+	if type(obj) ~= "table" then
+		return obj
+	end
+	local new_tbl = {}
+	for k, v in pairs(obj) do
+ 		new_tbl[k] = copy_tbl(v)
+	end
+	return new_tbl
 end
 
 function _update()
-
 	t += 1
- if (t > 30000) t = 0
- 
- if(not plr.menu) then
-  if(btnp(1)) then
-  	plr.gx += 1
-  elseif(btnp(0)) then
-  	plr.gx -= 1
-  elseif(btnp(2)) then
-   plr.gy -= 1
-  elseif(btnp(3)) then
-   plr.gy += 1
-  elseif(btnp(4)) then
-  	reset_menu()
+	if (t > 30000) t = 0
+	
+	if(not plr.menu) then
+		if(btnp(1)) then
+			plr.gx += 1
+		elseif(btnp(0)) then
+			plr.gx -= 1
+		elseif(btnp(2)) then
+			plr.gy -= 1
+		elseif(btnp(3)) then
+			plr.gy += 1
+		elseif(btnp(4)) then
+			reset_menu()
   	plr.menu=true
   end
   plr.gy = mid(0,plr.gy,rows)
@@ -133,18 +132,15 @@ function _update()
  u_enemy()
 end
 
-
-
 function _draw()
 	cls()
-	
 	for xi = 0, cols do
 		for yi = 0, rows do
 			cell = grid[xi][yi]
 			spr(cell.current_anim[cell.frame], (xi)*8, (yi)*8,1,1,cell.filp_h)
 			print(cell.flow,(xi)*8, (yi)*8,1)   
 		end
- end    
+	end    
 	
 	--draw player
 	spr(1, plr.gx*8, plr.gy*8)
@@ -160,7 +156,6 @@ function _draw()
 		d_menu()
 	end
 end
-
 
 -->8
 --enemy
@@ -259,12 +254,15 @@ function u_menu()
 		plr.menu = false
 	elseif(choice == "buildwall")then
 		grid[plr.gx][plr.gy] = copy_tbl(wall)
+		update_flow()
 		plr.menu = false
 	elseif(choice == "buildarrow")then
 		grid[plr.gx][plr.gy] = copy_tbl(arrow_tower)
+		update_flow()
 		plr.menu = false
 	elseif(choice == "buildcannon")then
 		grid[plr.gx][plr.gy] = copy_tbl(cannon_tower)
+		update_flow()
 		plr.menu = false
 	end
 	
