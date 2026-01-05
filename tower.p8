@@ -72,27 +72,6 @@ function update_flow()
 	end
 end
 
-function get_best_move(e)
-	if not flow_grid[e.gx] then return {0,0} end
-	
-	local current_score = flow_grid[e.gx][e.gy]
-	local best_dir = {0,0}
-    
-	for dir in all(directions) do
-		local nx = e.gx + dir[1]/8
-		local ny = e.gy + dir[2]/8
-        
-		if nx >= -1 and nx <= cols+1 and ny >= -1 and ny <= rows+1 then
-			local score = flow_grid[nx][ny]
-			if score < current_score then
-				current_score = score
-				best_dir = dir
-			end
-		end
-	end
-
-	return best_dir
-end
 
 function copy_tbl(obj)
 	if type(obj) ~= "table" then
@@ -138,7 +117,7 @@ function _draw()
 		for yi = 0, rows do
 			cell = grid[xi][yi]
 			spr(cell.current_anim[cell.frame], (xi)*8, (yi)*8,1,1,cell.filp_h)
-			print(cell.flow,(xi)*8, (yi)*8,1)   
+			--print(cell.flow,(xi)*8, (yi)*8,1)   
 		end
 	end    
 	
@@ -185,6 +164,11 @@ function u_enemy()
 	for e in all(enemies) do
 		
 	end
+end
+
+function best_move(e)
+	local current_score = grid[e.gx][e.gy].flow
+	
 end
 
 function spawn_enemy()
